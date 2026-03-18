@@ -1,0 +1,24 @@
+{
+  "name": "ericmarcantonio",
+  "owner": {
+    "name": "Eric Marcantonio",
+    "url": "https://github.com/EricMarcantonio"
+  },
+  "metadata": {
+    "version": "1.0.0",
+    "description": "Claude Code plugins from Eric Marcantonio — focused on code quality and engineering best practices"
+  },
+  "plugins": [
+    {
+      "name": "clean-code",
+      "version": "1.0.0",
+      "description": "Applies Clean Code and The Art of Clean Code principles when writing, reviewing, or refactoring code",
+      "tags": ["code-quality", "refactoring", "best-practices", "review"],
+      "author": {
+        "name": "Eric Marcantonio",
+        "url": "https://github.com/EricMarcantonio"
+      },
+      "source": "plugins/clean-code"
+    }
+  ]
+}

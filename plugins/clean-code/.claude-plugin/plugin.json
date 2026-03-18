@@ -1,0 +1,10 @@
+{
+  "name": "clean-code",
+  "version": "1.0.0",
+  "description": "Applies Clean Code and The Art of Clean Code principles when writing, reviewing, or refactoring code",
+  "tags": ["code-quality", "refactoring", "best-practices", "review"],
+  "author": {
+    "name": "Eric Marcantonio",
+    "url": "https://github.com/EricMarcantonio"
+  }
+}
