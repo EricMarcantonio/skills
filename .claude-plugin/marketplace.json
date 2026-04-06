@@ -19,6 +19,17 @@
         "url": "https://github.com/EricMarcantonio"
       },
       "source": "plugins/clean-code"
+    },
+    {
+      "name": "marketplace-listing",
+      "version": "1.0.0",
+      "description": "Creates optimized Facebook Marketplace, Kijiji, and Craigslist listings with researched retail pricing, specs, and compatibility info",
+      "tags": ["marketplace", "selling", "listings", "facebook-marketplace", "kijiji"],
+      "author": {
+        "name": "Eric Marcantonio",
+        "url": "https://github.com/EricMarcantonio"
+      },
+      "source": "plugins/marketplace-listing"
     }
   ]
 }
