@@ -15,6 +15,7 @@ Install an individual plugin:
 | Plugin | Description | Install |
 |--------|-------------|---------|
 | [clean-code](plugins/clean-code/) | Applies Clean Code and The Art of Clean Code principles when writing, reviewing, or refactoring | `/plugin install EricMarcantonio/skills/plugins/clean-code` |
+| [create-presentation](plugins/create-presentation/) | Build animated, narrated video presentations using Remotion + Kokoro TTS — no external services, outputs MP4 | `/plugin install EricMarcantonio/skills/plugins/create-presentation` |
 | [marketplace-listing](plugins/marketplace-listing/) | Creates optimized Facebook Marketplace, Kijiji, and Craigslist listings with researched retail pricing and specs | `/plugin install EricMarcantonio/skills/plugins/marketplace-listing` |
 
 ## Contributing
