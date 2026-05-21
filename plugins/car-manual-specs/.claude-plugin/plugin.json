@@ -1,0 +1,10 @@
+{
+  "name": "car-manual-specs",
+  "version": "1.0.0",
+  "description": "Extracts and saves key maintenance and torque specs from any car service manual PDF — oil capacity, drain plug, lug nuts, spark plugs, brake, and suspension torques",
+  "tags": ["automotive", "pdf", "torque", "maintenance", "service-manual"],
+  "author": {
+    "name": "Eric Marcantonio",
+    "url": "https://github.com/EricMarcantonio"
+  }
+}
