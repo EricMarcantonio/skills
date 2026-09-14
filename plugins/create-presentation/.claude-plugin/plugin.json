@@ -1,0 +1,10 @@
+{
+  "name": "create-presentation",
+  "version": "1.0.0",
+  "description": "Builds animated, narrated video presentations with Remotion and Kokoro TTS",
+  "tags": ["presentation", "video", "remotion", "tts"],
+  "author": {
+    "name": "Eric Marcantonio",
+    "url": "https://github.com/EricMarcantonio"
+  }
+}
