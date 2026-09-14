@@ -35,6 +35,11 @@ For pi, install the whole repo as a package (it declares `pi.skills` in `package
 pi install git:github.com/EricMarcantonio/skills
 ```
 
+Paths in the skills use `<skills-repo>` for that clone:
+`<agentDir>/git/github.com/EricMarcantonio/skills/`, i.e.
+`~/pi-config/git/github.com/EricMarcantonio/skills/` for a config directory at
+`~/pi-config`.
+
 ## Running the engine's tests
 
 From the repository root:

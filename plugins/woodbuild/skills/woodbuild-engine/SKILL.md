@@ -12,6 +12,15 @@ library that happens to ship as a skill: it is hidden from the model prompt and 
 read when another skill points at it, or explicitly with
 `/skill:woodbuild-engine`.
 
+## What `<skills-repo>` means
+
+Every command below uses `<skills-repo>` for the root of this repository. After a pi
+package install it is the clone at `<agentDir>/git/github.com/EricMarcantonio/skills/`
+— for a config directory at `~/pi-config`, that is
+`~/pi-config/git/github.com/EricMarcantonio/skills/`. When you are developing the
+plugins themselves it is the working copy, e.g.
+`~/Documents/GitHub Projects/skills/`.
+
 **Path coupling:** the other skills reach it as
 `<skills-repo>/plugins/woodbuild/skills/woodbuild-engine/scripts/…`, which is why every
 documented command is absolute — a build workspace lives outside this repo. That holds
