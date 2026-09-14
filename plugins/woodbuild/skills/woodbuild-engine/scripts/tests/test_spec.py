@@ -169,6 +169,18 @@ class TestOpeningOffsets(unittest.TestCase):
                 "mullions": 4, "panes": [3.5, 1.5, 4.5, 4.5, 1.5]}
         self._spec([band]).validate()
 
+    def test_overlap_is_caught_even_when_a_disjoint_opening_sorts_between(self):
+        band = {"wall": "front", "kind": "band", "width": 2610.92, "height": 300.0,
+                "sill": 1838.04, "header": None, "x": 89.0,
+                "mullions": 4, "panes": [3.5, 1.5, 4.5, 4.5, 1.5]}
+        window = {"wall": "front", "kind": "window", "width": 200.0, "height": 100.0,
+                  "sill": 1900.0, "header": None, "x": 1000.0}
+        with self.assertRaises(SpecError) as cm:
+            self._spec([self._door(), band, window]).validate()
+        self.assertIn("overlap", str(cm.exception))
+        self.assertIn("band", str(cm.exception))
+        self.assertIn("window", str(cm.exception))
+
 
 if __name__ == "__main__":
     unittest.main()
