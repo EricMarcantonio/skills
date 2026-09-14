@@ -16,3 +16,6 @@ Home Depot Canada sourcing and pricing for the woodbuild engine.
 
 Use it with the `woodbuild` plugin. Without this plugin the engine still runs: prices
 come from the cache only and tax reports as 0.0.
+
+`<skills-repo>` is the root of this repository — for a pi install,
+`<agentDir>/git/github.com/EricMarcantonio/skills/`.

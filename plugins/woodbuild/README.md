@@ -6,11 +6,13 @@ deviations table.
 
 ## Overview
 
-Seven steps, each owned by one skill: intake and invariants, reference-to-wood
-translation, the build spec, framing derivation, sheet and board nesting, the bill of
-materials, and product matching and pricing. The engine (`woodbuild-engine`) is
-stdlib-only Python and ships inside this plugin; a test enforces that the skills stay
-single-purpose and that no store name escapes the store plugin.
+Seven steps — intake and invariants, reference-to-wood translation, the build spec,
+framing derivation, sheet and board nesting, the bill of materials, and product
+matching and pricing. The orchestrator (`building-from-reference`) owns five of them
+and delegates framing and nesting to the two focused skills. The engine
+(`woodbuild-engine`) is stdlib-only Python and ships inside this plugin; a test
+enforces frontmatter validity, that only the engine is hidden, that no store name
+escapes the `homedepot` plugin, and that every engine-using skill names the engine.
 
 ## Skills
 
