@@ -10,17 +10,18 @@ holds everything that names a shop.
 
 ## Adapter
 
-`<repo>/skills/homedepot-catalogue/scripts/homedepot_adapter.py` is the only file
-in the repository that names a store. It supplies the MCP tool names, the store id,
+`<skills-repo>/plugins/homedepot/skills/homedepot-catalogue/scripts/homedepot_adapter.py`
+is the only file in these plugins that names a store — the guard fails if any other file
+does. It supplies the MCP tool names, the store id,
 the provincial tax table and the availability labels to the engine, which knows
 none of them:
 
 ```bash
-E=<repo>/skills/woodbuild-engine/scripts
+E=<skills-repo>/plugins/woodbuild/skills/woodbuild-engine/scripts
 python3 $E/woodbuild.py \
   --spec <workspace>/spec.json --prices <workspace>/prices.json \
   --out <workspace>/out \
-  --adapter <repo>/skills/homedepot-catalogue/scripts/homedepot_adapter.py
+  --adapter <skills-repo>/plugins/homedepot/skills/homedepot-catalogue/scripts/homedepot_adapter.py
 ```
 
 Without `--adapter` the engine prices from the cache only and reports tax as zero.

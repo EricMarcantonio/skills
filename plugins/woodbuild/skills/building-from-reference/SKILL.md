@@ -65,10 +65,10 @@ lives there and not beside `spec.json`.
 
 ```bash
 cd ~/Documents/woodbuild/<slug>
-E=<repo>/skills/woodbuild-engine/scripts
+E=<skills-repo>/plugins/woodbuild/skills/woodbuild-engine/scripts
 python3 $E/woodbuild.py --spec spec.json --prices prices.json --out out
 python3 $E/woodbuild.py --spec spec.json --prices prices.json --out out --candidates \
-  --adapter <repo>/skills/homedepot-catalogue/scripts/homedepot_adapter.py
+  --adapter <skills-repo>/plugins/homedepot/skills/homedepot-catalogue/scripts/homedepot_adapter.py
 ```
 
 The engine is stdlib-only; there is nothing to install.

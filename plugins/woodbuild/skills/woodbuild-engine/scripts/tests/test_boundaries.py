@@ -1,4 +1,4 @@
-"""The split, enforced. A store name outside homedepot-catalogue is a regression.
+"""The split, enforced. A store name outside the homedepot plugin is a regression.
 
 These tests are the reason the refactor stays done: prose drifts, and a helpful
 sentence about Home Depot in the framing rules would re-couple the two concerns
@@ -13,8 +13,8 @@ from woodbuild.adapters import load_adapter
 
 # This file lives at plugins/woodbuild/skills/woodbuild-engine/scripts/tests/, so
 # parents[5] is already the plugins directory. The guard scans the whole plugins tree: a
-# store name is a regression anywhere outside the homedepot plugin, and every plugin this
-# migration owns must have well-formed skill dirs.
+# store name is a regression anywhere outside the homedepot plugin, and every plugin in
+# the marketplace must have well-formed skill dirs.
 PLUGINS = pathlib.Path(__file__).resolve().parents[5]
 STORE_WORDS = ("Home Depot", "homedepot.ca", "homedepot.com", "hd_search",
                "hd_product", "HD_DEFAULT_STORE", "MicroPro")
@@ -33,7 +33,7 @@ ENGINE_SKILL = PLUGINS / "woodbuild" / "skills" / "woodbuild-engine"
 
 
 def skill_dirs():
-    # Every plugin in the marketplace tree, so the shape checks keep their full
+    # All seven marketplace plugins, so the shape checks keep their full
     # coverage. Namespaced marketplace names (e.g. "ericmarcantonio:clean-code") are
     # accepted by the name rule below as long as the final segment is the directory.
     return sorted(p for p in PLUGINS.glob("*/skills/*/SKILL.md"))
