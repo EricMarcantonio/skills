@@ -59,7 +59,7 @@ get an image, it is just the wrong one. Verify captures instead of trusting them
 ## Script
 
 ```python
-import sys; sys.path.insert(0, "<skills-repo>/plugins/freecad/skills/freecad-render-views/scripts")
+import sys; sys.path.insert(0, "<skills-repo>/plugins/freecad/skills/freecad-render-views/scripts")  # <skills-repo> = repo root (<agentDir>/git/github.com/EricMarcantonio/skills/)
 from freecad_views import render_views, reopen, flat_lines
 render_views(doc, "Shed", ["doors"], "/tmp/views")     # one view, one call
 ```

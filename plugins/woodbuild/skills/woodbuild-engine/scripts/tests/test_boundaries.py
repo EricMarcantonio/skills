@@ -21,11 +21,19 @@ STORE_WORDS = ("Home Depot", "homedepot.ca", "homedepot.com", "hd_search",
 # The plugin that owns the store's knowledge. The bare skill slug is allowed anywhere;
 # the store's own names are not.
 STORE_OWNER = "homedepot"
-# The five visible skills of the woodbuild plugin. Every one of them must name the engine
-# it uses. The freecad plugin's skills use no engine; they are only scanned for store
-# knowledge.
-ENGINE_USERS = {"building-from-reference", "wood-framing", "sheet-and-board-nesting",
-                "build-pricing", "freecad-model-to-spec"}
+# Every visible skill that depends on the engine, and the plugin that owns it: the five
+# visible woodbuild skills plus the homedepot plugin's store-adapter skill. Each must
+# name the engine it uses. The freecad plugin's skills use no engine; they are only
+# scanned for store knowledge.
+ENGINE_USER_PLUGINS = {
+    "building-from-reference": "woodbuild",
+    "wood-framing": "woodbuild",
+    "sheet-and-board-nesting": "woodbuild",
+    "build-pricing": "woodbuild",
+    "freecad-model-to-spec": "woodbuild",
+    "homedepot-catalogue": "homedepot",
+}
+ENGINE_USERS = set(ENGINE_USER_PLUGINS)
 # The two files whose job is to name the store in order to check the seam.
 STORE_NAMING_ALLOWED = {"test_boundaries.py", "test_adapters.py"}
 EXPECTED_PLUGINS = {"woodbuild", "freecad", "homedepot"}
@@ -127,8 +135,8 @@ class TestSkillsAreWellFormed(unittest.TestCase):
         self.assertEqual(hidden, {"woodbuild-engine"})
 
     def test_every_skill_this_split_owns_points_at_the_engine(self):
-        for name in sorted(ENGINE_USERS):
-            path = PLUGINS / "woodbuild" / "skills" / name / "SKILL.md"
+        for name, plugin in sorted(ENGINE_USER_PLUGINS.items()):
+            path = PLUGINS / plugin / "skills" / name / "SKILL.md"
             with self.subTest(skill=name):
                 self.assertTrue(path.exists(), "missing skill %s" % name)
                 self.assertIn("woodbuild-engine", path.read_text(),
