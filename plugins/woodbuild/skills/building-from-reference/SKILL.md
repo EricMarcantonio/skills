@@ -63,6 +63,9 @@ lives there and not beside `spec.json`.
 
 ## Running the engine
 
+`<skills-repo>` is the installed package clone (`<agentDir>/git/github.com/EricMarcantonio/skills/`)
+or your working copy of that repository; `woodbuild-engine`'s own skill spells this out.
+
 ```bash
 cd ~/Documents/woodbuild/<slug>
 E=<skills-repo>/plugins/woodbuild/skills/woodbuild-engine/scripts
