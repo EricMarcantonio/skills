@@ -12,9 +12,11 @@ library that happens to ship as a skill: it is hidden from the model prompt and 
 read when another skill points at it, or explicitly with
 `/skill:woodbuild-engine`.
 
-**Path coupling:** the other skills reach it as `../woodbuild-engine/scripts/...`.
-That holds only while the whole `skills/` tree travels together — same repo, same
-package. Do not split the tree across packages.
+**Path coupling:** the other skills reach it as
+`<skills-repo>/plugins/woodbuild/skills/woodbuild-engine/scripts/…`, which is why every
+documented command is absolute — a build workspace lives outside this repo. That holds
+only while the whole plugin tree travels together — same repo, same package. Do not
+split the tree across packages.
 
 ## Modules
 
@@ -64,9 +66,10 @@ Optimiser constants: **kerf 3.0 mm** between adjacent parts and at board cut end
 ## Running
 
 ```bash
-python3 scripts/woodbuild.py --spec <workspace>/spec.json \
+python3 <skills-repo>/plugins/woodbuild/skills/woodbuild-engine/scripts/woodbuild.py \
+  --spec <workspace>/spec.json \
   --prices <workspace>/prices.json --out <workspace>/out \
-  [--adapter <repo>/skills/homedepot-catalogue/scripts/homedepot_adapter.py] \
+  [--adapter <skills-repo>/plugins/homedepot/skills/homedepot-catalogue/scripts/homedepot_adapter.py] \
   [--candidates | --set-price CLASS SKU --why TEXT | --fetch] \
   [--compare old-prices.json] [--server PATH] [--today YYYY-MM-DD]
 ```
@@ -78,9 +81,9 @@ board choice is cost-aware.
 ## Tests
 
 ```bash
-cd <repo>
-python3 -m unittest discover -s skills/woodbuild-engine/scripts/tests \
-  -t skills/woodbuild-engine/scripts
+cd <skills-repo>
+python3 -m unittest discover -s plugins/woodbuild/skills/woodbuild-engine/scripts/tests \
+  -t plugins/woodbuild/skills/woodbuild-engine/scripts
 ```
 
 `-t` is required: the tests and the package are siblings under `scripts/`, and

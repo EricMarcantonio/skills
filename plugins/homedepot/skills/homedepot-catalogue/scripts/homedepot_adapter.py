@@ -5,7 +5,7 @@ machine-local server path, the provincial tax table and the availability labels.
 The engine takes this as data through `woodbuild.adapters.StoreAdapter`, so a
 different retailer is a different file like this one and no engine change.
 
-Pass it to the CLI:  --adapter skills/homedepot-catalogue/scripts/homedepot_adapter.py
+Pass it to the CLI:  --adapter <skills-repo>/plugins/homedepot/skills/homedepot-catalogue/scripts/homedepot_adapter.py
 """
 
 import os

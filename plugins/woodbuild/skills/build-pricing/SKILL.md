@@ -14,7 +14,7 @@ The method. Which shop answers, and how to reach it, is the store adapter's job
 money. Only an agent's judgement, recorded with a reason, prices a class.
 
 ```bash
-E=<repo>/skills/woodbuild-engine/scripts
+E=<skills-repo>/plugins/woodbuild/skills/woodbuild-engine/scripts
 cd <workspace>
 # 1. what still needs a match, with candidates to read
 python3 $E/woodbuild.py --spec spec.json --prices prices.json --out out --candidates \
