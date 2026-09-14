@@ -2,6 +2,7 @@
 import json
 import unittest
 
+from woodbuild import frame
 from woodbuild.frame import derive, header_depth_for_span, stud_positions, summary
 from woodbuild.spec import BuildSpec
 from woodbuild import stock
@@ -111,7 +112,9 @@ class TestFrame(unittest.TestCase):
         blocking = [p for p in parts if p.id.startswith("blocking_")]
         self.assertEqual(len(blocking), 4)                 # one run per wall
         front = [p for p in blocking if p.id == "blocking_front"][0]
-        self.assertEqual(front.qty, 7)                     # 8 stud positions -> 7 bays
+        # 8 stud positions, but the 1386.84 mm door removes the four centres inside
+        # it (D3) -> 4 placed studs -> 3 bays. Was 7 before studs followed openings.
+        self.assertEqual(front.qty, 3)
 
     def test_blocking_fits_the_actual_bay(self):
         # studs sit at span / bays, so the clear bay is that pitch minus a stud
@@ -134,6 +137,78 @@ class TestFrame(unittest.TestCase):
         s = summary(derive(spec()))
         self.assertIn("wall_front", s)
         self.assertGreater(s["floor"], 0)
+
+
+class TestPlacement(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.spec = BuildSpec(json.loads(json.dumps(SPEC)))
+        cls.parts = frame.derive(cls.spec)
+
+    def _row(self, part_id):
+        return [p for p in self.parts if p.id == part_id][0]
+
+    def test_every_wall_member_is_placed_and_cut_parts_are_not(self):
+        for p in self.parts:
+            if p.kind in ("sole_plate", "top_plate", "stud", "blocking", "king", "jack",
+                          "header", "cripple", "sill", "corner"):
+                self.assertIsNotNone(p.x, "%s has no position" % p.id)
+                self.assertIsNotNone(p.y, "%s has no position" % p.id)
+                self.assertIsNotNone(p.run, "%s has no drawn extent" % p.id)
+                self.assertIsNotNone(p.rise, "%s has no drawn extent" % p.id)
+            else:
+                self.assertIsNone(p.x, "%s is cut from a sheet, not placed" % p.id)
+
+    def test_a_repeated_member_publishes_one_position_per_copy(self):
+        studs = self._row("stud_front")
+        self.assertEqual(len(frame.PLACEMENTS["stud_front"]), studs.qty)
+
+    def test_studs_inside_the_door_are_not_placed_or_counted(self):
+        studs = self._row("stud_front")
+        centres = sorted(x + 19.0 for x in frame.PLACEMENTS["stud_front"])
+        self.assertEqual(len(centres), studs.qty)
+        door_x, door_w = 701.04, 1386.84
+        for c in centres:
+            self.assertFalse(door_x < c < door_x + door_w,
+                             "stud at %.1f sits inside the door" % c)
+
+    def test_an_opening_that_does_not_reach_the_floor_keeps_its_studs(self):
+        # the clerestory band spans the whole front wall above head height; its studs
+        # stay, and the sill, header and cripples attach to them
+        front = self._row("stud_front").qty
+        door_only = len([c for c in frame.placed_centres(self.spec, "front")])
+        self.assertEqual(front, door_only)
+        back = self._row("stud_back").qty          # no openings at all
+        self.assertGreater(back, front)
+
+    def test_the_stud_run_still_closes_on_the_wall_end(self):
+        xs = sorted(frame.PLACEMENTS["stud_front"])
+        self.assertAlmostEqual(xs[-1] + 19.0, 2788.92, places=1)
+
+    def test_blocking_fills_the_bays_between_placed_studs(self):
+        centres = sorted(x + 19.0 for x in frame.PLACEMENTS["stud_front"])
+        blocking = sorted(frame.PLACEMENTS["blocking_front"])
+        self.assertEqual(len(blocking), len(centres) - 1)
+
+    def test_king_studs_sit_on_the_opening_jambs(self):
+        kings = sorted(frame.PLACEMENTS["king_front_door"])
+        self.assertEqual(len(kings), 2)
+        self.assertAlmostEqual(kings[0] + 38.0, 701.04, places=1)
+        self.assertAlmostEqual(kings[1], 701.04 + 1386.84, places=1)
+
+    def test_the_datum_is_the_floor_deck_and_the_door_head_agrees(self):
+        header = self._row("header_front_door")
+        self.assertAlmostEqual(header.y, 1811.02, places=1)
+        sole = self._row("sole_plate_front")
+        self.assertAlmostEqual(sole.y, 0.0, places=1)
+
+    def test_drawn_extents_are_not_the_cutting_dimensions(self):
+        stud = self._row("stud_front")
+        self.assertAlmostEqual(stud.run, 38.0, places=1)          # across the wall
+        self.assertAlmostEqual(stud.rise, self.spec.wall_top_front(), places=1)
+        plate = self._row("sole_plate_front")
+        self.assertAlmostEqual(plate.run, 2788.92, places=1)      # along the wall
+        self.assertAlmostEqual(plate.rise, 38.0, places=1)
 
 
 if __name__ == "__main__":

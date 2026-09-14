@@ -61,9 +61,9 @@ class TestRealBuild(unittest.TestCase):
 
     def test_framing_counts_are_sane(self):
         studs = [p for p in self.parts if p.id == "stud_front"][0]
-        # a 2.79 m wall at 406.4 mm o.c. gives 7 studs + an end stud
-        self.assertGreaterEqual(studs.qty, 8)
-        self.assertLessEqual(studs.qty, 10)
+        # a 2.79 m wall at 406.4 o.c. closes on the end with 8 stud positions; the
+        # 1386.84 mm door removes the four that fall inside it (see D3)
+        self.assertEqual(studs.qty, 4)
 
     def test_bom_has_every_category(self):
         cats = {l.category for l in self.lines}

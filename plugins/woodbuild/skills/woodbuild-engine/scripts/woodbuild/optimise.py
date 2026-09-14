@@ -14,13 +14,25 @@ class NestError(Exception):
 @dataclass
 class Part:
     id: str
-    w: float
-    h: float
+    w: float            # cutting length (along the grain)
+    h: float            # cutting width (across the grain)
     qty: int = 1
     stock: str = ""
     grain_locked: bool = False
     assembly: str = ""
     note: str = ""
+    # Placement, for members that live in a wall rather than coming off a sheet.
+    # x is mm from the wall's left corner face, y is mm up from the top of the floor
+    # deck. run/rise are the member's extents as the elevation draws it — NOT its
+    # cutting dimensions: a stud is cut 2138x89 and drawn 38 wide x 2138 tall, a plate
+    # is cut 2788x89 and drawn 2788 x 38, a header is drawn as deep as its stock.
+    # Cut parts (sheathing, deck, door skins) leave all four None.
+    wall: str = ""
+    x: float = None
+    y: float = None
+    run: float = None
+    rise: float = None
+    kind: str = ""
 
     def area(self):
         return self.w * self.h * self.qty
