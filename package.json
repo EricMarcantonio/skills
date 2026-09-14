@@ -1,0 +1,11 @@
+{
+  "name": "@ericmarcantonio/skills",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Claude Code plugins and pi skills by Eric Marcantonio",
+  "keywords": ["pi-package", "claude-code-plugins"],
+  "license": "MIT",
+  "pi": {
+    "skills": ["plugins/*/skills"]
+  }
+}
