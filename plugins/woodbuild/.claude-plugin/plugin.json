@@ -1,0 +1,10 @@
+{
+  "name": "woodbuild",
+  "version": "1.0.0",
+  "description": "Turns a reference structure into a buildable wood version: build spec, framing, cutlist, nesting, bill of materials and a priced workbook",
+  "tags": ["woodworking", "framing", "cutlist", "bill-of-materials", "freecad", "estimation"],
+  "author": {
+    "name": "Eric Marcantonio",
+    "url": "https://github.com/EricMarcantonio"
+  }
+}

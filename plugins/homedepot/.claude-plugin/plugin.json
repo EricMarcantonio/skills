@@ -1,0 +1,10 @@
+{
+  "name": "homedepot",
+  "version": "1.0.0",
+  "description": "Home Depot Canada sourcing and pricing for the woodbuild engine: store adapter, per-store SKUs and availability traps",
+  "tags": ["home-depot", "pricing", "sourcing", "woodworking"],
+  "author": {
+    "name": "Eric Marcantonio",
+    "url": "https://github.com/EricMarcantonio"
+  }
+}

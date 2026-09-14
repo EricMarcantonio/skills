@@ -1,0 +1,10 @@
+{
+  "name": "freecad",
+  "version": "1.0.0",
+  "description": "FreeCAD authoring hygiene and reliable view capture: disjoint-part modelling, silent boolean failures, the DAG-root overlap audit, and the 1.1 view API limits",
+  "tags": ["freecad", "cad", "3d-modelling", "rendering", "screenshots"],
+  "author": {
+    "name": "Eric Marcantonio",
+    "url": "https://github.com/EricMarcantonio"
+  }
+}
