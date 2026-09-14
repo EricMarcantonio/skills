@@ -18,7 +18,7 @@
         "name": "Eric Marcantonio",
         "url": "https://github.com/EricMarcantonio"
       },
-      "source": "plugins/clean-code"
+      "source": "./plugins/clean-code"
     },
     {
       "name": "marketplace-listing",
@@ -29,7 +29,7 @@
         "name": "Eric Marcantonio",
         "url": "https://github.com/EricMarcantonio"
       },
-      "source": "plugins/marketplace-listing"
+      "source": "./plugins/marketplace-listing"
     },
     {
       "name": "woodbuild",
@@ -40,7 +40,7 @@
         "name": "Eric Marcantonio",
         "url": "https://github.com/EricMarcantonio"
       },
-      "source": "plugins/woodbuild"
+      "source": "./plugins/woodbuild"
     },
     {
       "name": "freecad",
@@ -51,7 +51,7 @@
         "name": "Eric Marcantonio",
         "url": "https://github.com/EricMarcantonio"
       },
-      "source": "plugins/freecad"
+      "source": "./plugins/freecad"
     },
     {
       "name": "homedepot",
@@ -62,7 +62,7 @@
         "name": "Eric Marcantonio",
         "url": "https://github.com/EricMarcantonio"
       },
-      "source": "plugins/homedepot"
+      "source": "./plugins/homedepot"
     },
     {
       "name": "car-manual-specs",
@@ -73,7 +73,7 @@
         "name": "Eric Marcantonio",
         "url": "https://github.com/EricMarcantonio"
       },
-      "source": "plugins/car-manual-specs"
+      "source": "./plugins/car-manual-specs"
     },
     {
       "name": "create-presentation",
@@ -84,7 +84,7 @@
         "name": "Eric Marcantonio",
         "url": "https://github.com/EricMarcantonio"
       },
-      "source": "plugins/create-presentation"
+      "source": "./plugins/create-presentation"
     }
   ]
 }

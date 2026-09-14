@@ -39,6 +39,19 @@ class BuildSpec:
         items = self.data.get("openings", [])
         return [o for o in items if wall is None or o["wall"] == wall]
 
+    def opening_x(self, opening):
+        """Left edge of an opening, mm from the wall's left corner-assembly face.
+
+        Required: a schedule must never guess where an opening sits, so there is no
+        centred default. A CAD-sourced spec fills this from the model's cutter.
+        """
+        x = opening.get("x")
+        if x is None:
+            raise SpecError("%s %s has no x: an elevation cannot be drawn and a "
+                            "schedule must not guess where the opening sits"
+                            % (opening["wall"], opening["kind"]))
+        return float(x)
+
     def substitutions(self):
         return self.data.get("substitutions", [])
 
@@ -122,10 +135,12 @@ class BuildSpec:
             problems.append("wall build-up %.1f mm does not fit inside depth %.1f mm"
                             % (build_up, env["depth"]))
 
-        for wall, span in (("front", env["width"]), ("back", env["width"]),
-                           ("left", env["depth"]), ("right", env["depth"])):
+        corner = float(self.data["wall"].get("corner_width", 89.0))
+        walls = (("front", env["width"]), ("back", env["width"]),
+                 ("left", env["depth"]), ("right", env["depth"]))
+        for wall, span in walls:
             # an opening spans between the corner assemblies, not the interior clear
-            limit = span - 2 * float(self.data["wall"].get("corner_width", 89.0))
+            limit = span - 2 * corner
             for o in self.openings(wall):
                 if float(o["width"]) > limit:
                     problems.append("%s %s opening %.1f mm is wider than the %s wall "
@@ -136,6 +151,35 @@ class BuildSpec:
                                     % (wall, o["kind"]))
                 if o["kind"] == "door" and wall in ("left", "right"):
                     problems.append("doors belong on the front or back wall")
+
+        # an opening needs an offset, must clear the corners and must not overlap a
+        # neighbour. Overlap is two-dimensional: a band above a door head shares the
+        # door's x-range but not its height, so it is not a collision.
+        for wall, span in walls:
+            placed = []
+            for o in self.openings(wall):
+                try:
+                    x = self.opening_x(o)
+                except SpecError as exc:
+                    problems.append(str(exc))
+                    continue
+                width = float(o["width"])
+                if x < corner or x + width > span - corner:
+                    problems.append("%s %s at x=%.1f width=%.1f does not fit between the "
+                                    "corners (%.1f..%.1f)"
+                                    % (wall, o["kind"], x, width, corner, span - corner))
+                sill = float(o["sill"])
+                placed.append((x, x + width, sill, sill + float(o["height"]), o["kind"]))
+            placed.sort()
+            for i, (a0, a1, asill, ahead, ak) in enumerate(placed):
+                for b0, b1, bsill, bhead, bk in placed[i + 1:]:
+                    if b0 >= a1:
+                        continue                      # no horizontal overlap
+                    if bsill < ahead and asill < bhead:
+                        problems.append("%s %s and %s overlap (x %.1f..%.1f y %.1f..%.1f vs "
+                                        "x %.1f..%.1f y %.1f..%.1f)"
+                                        % (wall, ak, bk, a0, a1, asill, ahead,
+                                           b0, b1, bsill, bhead))
 
         if self.data["floor"].get("below_datum") and float(self.data["floor"]["build_up"]) <= 0:
             problems.append("floor build-up must be positive to sit below the datum")
