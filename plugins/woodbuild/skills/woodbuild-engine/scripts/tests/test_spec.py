@@ -5,6 +5,11 @@ import unittest
 
 from woodbuild.spec import BuildSpec, SpecError
 
+try:                                    # `python3 -m unittest tests.test_spec`
+    from tests.woodbuild_spec_fixture import SPEC
+except ImportError:                     # discovered with tests/ itself on the path
+    from woodbuild_spec_fixture import SPEC  # type: ignore
+
 GOOD = {
     "build": "unit-test",
     "envelope": {"width": 2788.92, "depth": 2179.32, "height_tall": 2258.06,
@@ -17,9 +22,9 @@ GOOD = {
               "skids": "pt_4x4", "build_up": 196.0, "below_datum": True},
     "openings": [
         {"wall": "front", "kind": "door", "width": 1386.84, "height": 1811.02,
-         "sill": 0.0, "header": "2x8"},
+         "sill": 0.0, "header": "2x8", "x": 701.04},
         {"wall": "front", "kind": "band", "width": 2610.92, "height": 300.0,
-         "sill": 1838.04, "header": None},
+         "sill": 1838.04, "header": None, "x": 89.0},
     ],
     "substitutions": [{"ref": "45mm post", "build": "3-stud corner",
                        "consequence": "corner trim needed", "changes_diagram": True}],
@@ -119,6 +124,50 @@ class TestSpec(unittest.TestCase):
     def test_search_terms_pass_through(self):
         spec = BuildSpec.load(self.path)
         self.assertEqual(spec.search_terms()["2x4"], "2x4x8 SPF stud")
+
+
+class TestOpeningOffsets(unittest.TestCase):
+    def _spec(self, openings):
+        data = json.loads(json.dumps(SPEC))
+        data["openings"] = openings
+        return BuildSpec(data)
+
+    def _door(self, **over):
+        o = {"wall": "front", "kind": "door", "width": 1386.84, "height": 1811.02,
+             "sill": 0.0, "header": "2x8", "x": 701.04}
+        o.update(over)
+        return o
+
+    def test_an_opening_without_an_offset_is_refused(self):
+        with self.assertRaises(SpecError) as cm:
+            self._spec([self._door(x=None)]).validate()
+        self.assertIn("front door", str(cm.exception))
+        self.assertIn("x", str(cm.exception))
+
+    def test_an_opening_outside_the_corner_span_is_refused(self):
+        # 89 mm corner each side of a 2788.92 wall: x + width must stay <= 2699.92
+        with self.assertRaises(SpecError):
+            self._spec([self._door(x=1400.0)]).validate()
+        with self.assertRaises(SpecError):
+            self._spec([self._door(x=10.0)]).validate()
+
+    def test_two_openings_may_not_overlap_on_one_wall(self):
+        near = self._door(kind="transom", width=500.0, height=400.0, sill=1000.0,
+                          header=None, x=800.0)
+        with self.assertRaises(SpecError) as cm:
+            self._spec([self._door(), near]).validate()
+        self.assertIn("overlap", str(cm.exception))
+
+    def test_disjoint_openings_on_one_wall_are_accepted(self):
+        left = self._door(kind="transom", width=500.0, height=400.0, sill=1000.0,
+                          header=None, x=200.0)
+        self._spec([self._door(), left]).validate()      # raises nothing
+
+    def test_the_band_may_sit_across_the_front_wall(self):
+        band = {"wall": "front", "kind": "band", "width": 2610.92, "height": 300.0,
+                "sill": 1838.04, "header": None, "x": 89.0,
+                "mullions": 4, "panes": [3.5, 1.5, 4.5, 4.5, 1.5]}
+        self._spec([band]).validate()
 
 
 if __name__ == "__main__":

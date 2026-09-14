@@ -31,9 +31,9 @@ SPEC = {
               "skids": "pt_4x4", "build_up": 196.0, "below_datum": True},
     "openings": [
         {"wall": "front", "kind": "door", "width": 1386.84, "height": 1811.02,
-         "sill": 0.0, "header": "2x8"},
+         "sill": 0.0, "header": "2x8", "x": 701.04},
         {"wall": "front", "kind": "band", "width": 2610.92, "height": 300.0,
-         "sill": 1838.04, "header": None, "mullions": 4,
+         "sill": 1838.04, "header": None, "x": 89.0, "mullions": 4,
          "panes": [3.5, 1.5, 4.5, 4.5, 1.5]},
     ],
     "substitutions": [{"ref": "45mm moulded post", "build": "3-stud 2x4 corner",
