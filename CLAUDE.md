@@ -15,6 +15,7 @@ plugins/
       <skill-name>/
         SKILL.md            # Skill definition (frontmatter + instructions)
     README.md               # Plugin documentation
+package.json                # pi package manifest; declares "pi": {"skills": ["plugins/*/skills"]}
 README.md                   # Repo overview and install instructions
 CLAUDE.md                   # This file
 ```
@@ -25,8 +26,9 @@ CLAUDE.md                   # This file
 2. Write the `SKILL.md` with YAML frontmatter (`name`, `description`) and skill instructions
 3. Write `plugin.json` with name, version, description, tags, and author
 4. Write a `README.md` for the plugin
-5. Add an entry to `.claude-plugin/marketplace.json` under `"plugins"`
-6. Add a row to the table in the root `README.md`
+5. Confirm the root `package.json` still declares the pi skills glob (`"pi": {"skills": ["plugins/*/skills"]}`) so pi discovers the new plugin
+6. Add an entry to `.claude-plugin/marketplace.json` under `"plugins"`
+7. Add a row to the table in the root `README.md`
 
 ## Plugin Metadata (`plugin.json`)
 
@@ -44,3 +46,8 @@ Required fields:
 |--------|---------|
 | `clean-code` | Enforces Clean Code principles when writing or reviewing code |
 | `marketplace-listing` | Creates optimized Marketplace/Kijiji/Craigslist listings with researched pricing |
+| `woodbuild` | Turns a reference structure into a buildable wood version: spec, framing, cutlist, nesting, BOM, priced workbook |
+| `freecad` | FreeCAD authoring hygiene and reliable view capture |
+| `homedepot` | Home Depot Canada sourcing and pricing for the woodbuild engine |
+| `car-manual-specs` | Extracts maintenance and torque specs from car service manual PDFs |
+| `create-presentation` | Builds animated, narrated video presentations with Remotion and Kokoro TTS |

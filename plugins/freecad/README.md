@@ -16,3 +16,6 @@ Two skills for authoring and inspecting FreeCAD documents without the traps.
 ```
 
 Neither skill needs the woodbuild engine.
+
+`<skills-repo>` is the root of this repository — for a pi install,
+`<agentDir>/git/github.com/EricMarcantonio/skills/`.

@@ -21,7 +21,7 @@ positives (every `Base` against its `Cut` result).
 being one, which a name-prefix or visibility filter silently misses.
 
 ```python
-import sys; sys.path.insert(0, "<skills-repo>/plugins/freecad/skills/freecad-model-hygiene/scripts")
+import sys; sys.path.insert(0, "<skills-repo>/plugins/freecad/skills/freecad-model-hygiene/scripts")  # <skills-repo> = repo root (<agentDir>/git/github.com/EricMarcantonio/skills/)
 from audit import dag_roots, check_disjoint, pairwise_overlap, cut_removed_material
 parts = dag_roots(doc)
 print(check_disjoint(parts))        # (sum, union, overlap) - see the tolerance below
