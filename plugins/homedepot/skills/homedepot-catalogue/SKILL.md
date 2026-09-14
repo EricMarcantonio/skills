@@ -11,9 +11,10 @@ holds everything that names a shop.
 ## Adapter
 
 `<skills-repo>/plugins/homedepot/skills/homedepot-catalogue/scripts/homedepot_adapter.py`
-is where store knowledge lives for the engine: it hands the engine the store id, the tax
-rate, the MCP tool names and the availability labels. The guard fails if a store name
-appears in any other plugin's `.py` or `.md` files:
+is where store knowledge lives for the engine: it hands the engine the store id, the
+provincial tax table, the MCP tool names and the availability labels. The guard fails if
+a store name appears in any other plugin, apart from the two tests whose job is to check
+that seam:
 
 ```bash
 E=<skills-repo>/plugins/woodbuild/skills/woodbuild-engine/scripts
