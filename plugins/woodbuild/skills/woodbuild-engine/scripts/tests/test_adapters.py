@@ -71,8 +71,9 @@ class TestLoadAdapter(unittest.TestCase):
     def test_the_shipped_store_adapter_satisfies_the_protocol(self):
         import json
         import pathlib
-        repo = pathlib.Path(__file__).resolve().parents[4]
-        path = repo / "skills" / "homedepot-catalogue" / "scripts" / "homedepot_adapter.py"
+        plugins = pathlib.Path(__file__).resolve().parents[5]
+        path = (plugins / "homedepot" / "skills" / "homedepot-catalogue"
+                / "scripts" / "homedepot_adapter.py")
         self.assertTrue(path.exists(), "the store adapter must exist at %s" % path)
         a = load_adapter(str(path))
         self.assertEqual(a.search_tool, "hd_search")
