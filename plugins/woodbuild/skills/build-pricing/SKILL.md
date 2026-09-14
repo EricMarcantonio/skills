@@ -1,6 +1,6 @@
 ---
 name: build-pricing
-description: Use when pricing a material list — turning stock classes into verified prices with provenance, deciding whether a search hit may become a price, or reporting a line as unpriced. Store-agnostic: it never names a retailer.
+description: "Use when pricing a material list — turning stock classes into verified prices with provenance, deciding whether a search hit may become a price, or reporting a line as unpriced. Store-agnostic: it never names a retailer."
 ---
 
 # Pricing a build
