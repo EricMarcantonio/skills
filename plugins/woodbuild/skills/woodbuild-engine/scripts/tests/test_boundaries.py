@@ -102,6 +102,23 @@ class TestSkillsAreWellFormed(unittest.TestCase):
                 self.assertGreater(len(desc.group(1).strip()), 20)
                 self.assertLessEqual(len(desc.group(1).strip()), 1024)
 
+    def test_no_frontmatter_scalar_is_unquoted_inline_mapping_syntax(self):
+        # `description: … Store-agnostic: it never names a retailer.` is invalid YAML:
+        # an unquoted scalar cannot contain ": ". pi drops such a skill entirely, so a
+        # broken scalar is a skill that never loads. Checked for every scalar we set.
+        offenders = []
+        for path in skill_dirs():
+            front = re.search(r"^---\n(.*?)\n---\n", path.read_text(), re.S)
+            if not front:
+                continue
+            for line in front.group(1).splitlines():
+                m = re.match(r"^(name|description): (.+)$", line)
+                if not m or m.group(2).lstrip().startswith(('"', "'")):
+                    continue
+                if ": " in m.group(2):
+                    offenders.append("%s has an unquoted scalar containing ': '" % path)
+        self.assertEqual(offenders, [], "quote the scalar or remove the colon")
+
     def test_only_the_engine_is_hidden(self):
         hidden = set()
         for path in skill_dirs():
