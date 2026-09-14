@@ -1,5 +1,5 @@
 ---
-name: "ericmarcantonio:clean-code"
+name: clean-code
 description: "Enforces the complete Clean Code framework (Robert C. Martin) and The Art of Clean Code (Christian Mayer): specific rules for naming, single-responsibility functions, command-query separation, fail-fast patterns, DRY, no-null returns, the Boy Scout Rule, and the 80/20 principle. Also provides a structured review format (Critical / Significant / Minor) for code reviews. Consult this skill any time you are writing a new function, class, or module; doing a code review or PR review; refactoring or cleaning up existing code; or when the user says code is hard to read, messy, or needs improvement — even if they just say 'write me a function to do X'. This skill has specific named principles and output formats that go beyond general coding advice, so always use it for code quality work."
 accepts_conversation: true
 tools:
