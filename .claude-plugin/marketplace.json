@@ -30,6 +30,61 @@
         "url": "https://github.com/EricMarcantonio"
       },
       "source": "plugins/marketplace-listing"
+    },
+    {
+      "name": "woodbuild",
+      "version": "1.0.0",
+      "description": "Turns a reference structure into a buildable wood version: build spec, framing, cutlist, nesting, bill of materials and a priced workbook",
+      "tags": ["woodworking", "framing", "cutlist", "bill-of-materials", "freecad", "estimation"],
+      "author": {
+        "name": "Eric Marcantonio",
+        "url": "https://github.com/EricMarcantonio"
+      },
+      "source": "plugins/woodbuild"
+    },
+    {
+      "name": "freecad",
+      "version": "1.0.0",
+      "description": "FreeCAD authoring hygiene and reliable view capture",
+      "tags": ["freecad", "cad", "3d-modelling", "rendering"],
+      "author": {
+        "name": "Eric Marcantonio",
+        "url": "https://github.com/EricMarcantonio"
+      },
+      "source": "plugins/freecad"
+    },
+    {
+      "name": "homedepot",
+      "version": "1.0.0",
+      "description": "Home Depot Canada sourcing and pricing for the woodbuild engine",
+      "tags": ["home-depot", "pricing", "sourcing", "woodworking"],
+      "author": {
+        "name": "Eric Marcantonio",
+        "url": "https://github.com/EricMarcantonio"
+      },
+      "source": "plugins/homedepot"
+    },
+    {
+      "name": "car-manual-specs",
+      "version": "1.0.0",
+      "description": "Extracts and saves key maintenance and torque specs from any car service manual PDF",
+      "tags": ["car", "service-manual", "torque-specs", "pdf"],
+      "author": {
+        "name": "Eric Marcantonio",
+        "url": "https://github.com/EricMarcantonio"
+      },
+      "source": "plugins/car-manual-specs"
+    },
+    {
+      "name": "create-presentation",
+      "version": "1.0.0",
+      "description": "Builds animated, narrated video presentations with Remotion and Kokoro TTS",
+      "tags": ["presentation", "video", "remotion", "tts"],
+      "author": {
+        "name": "Eric Marcantonio",
+        "url": "https://github.com/EricMarcantonio"
+      },
+      "source": "plugins/create-presentation"
     }
   ]
 }
