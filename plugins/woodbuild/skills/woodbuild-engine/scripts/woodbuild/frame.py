@@ -124,8 +124,11 @@ def placed_centres(spec, wall):
     spacing = float(spec.data["wall"].get("spacing", STUD_SPACING_DEFAULT))
     clear = [(spec.opening_x(o), spec.opening_x(o) + float(o["width"]))
              for o in spec.openings(wall) if float(o["sill"]) <= 0.0]
+    # body overlap, not centre-in-range: a stud whose 38 mm body straddles a jamb
+    # would otherwise survive and draw inside the doorway
+    half = _stud_half()
     out = [c for c in stud_positions(span, spacing)
-           if not any(a <= c <= b for a, b in clear)]
+           if not any(c - half < b and c + half > a for a, b in clear)]
     if not out:
         raise SpecError("wall %s has no studs left after its openings" % wall)
     return out
@@ -171,16 +174,22 @@ def _blocking(spec, wall, parts):
         return
     half = _stud_half()
     thick = stock.board_dims("2x4")[0]
-    parts.append(Part(id="blocking_%s" % wall,
-                      w=round(centres[1] - centres[0] - thick, 2),
-                      h=stock.board_dims("2x4")[1], qty=len(centres) - 1, stock="2x4",
-                      assembly="wall_%s" % wall,
-                      note="blocking at the roof bearing line",
-                      wall=wall, x=round(centres[0] + half, 2),
-                      y=round(spec.wall_top_front() - thickness_of("2x4"), 2),
-                      run=round(centres[1] - centres[0] - thick, 2),
-                      rise=thickness_of("2x4"), kind="blocking"))
-    PLACEMENTS["blocking_%s" % wall] = [c + half for c in centres[:-1]]
+    # bays are not all equal once openings remove studs, so one row per distinct
+    # clear width — a single row carrying the first bay's width under-reports the run
+    bays = {}
+    for a, b in zip(centres, centres[1:]):
+        width = round(b - a - thick, 2)
+        bays.setdefault(width, []).append(round(a + half, 2))
+    for i, (width, xs) in enumerate(sorted(bays.items()), start=1):
+        pid = "blocking_%s_%d" % (wall, i)
+        parts.append(Part(id=pid, w=width, h=stock.board_dims("2x4")[1], qty=len(xs),
+                          stock="2x4", assembly="wall_%s" % wall,
+                          note="blocking at the roof bearing line (%d bay%s)"
+                               % (len(xs), "" if len(xs) == 1 else "s"),
+                          wall=wall, x=xs[0],
+                          y=round(spec.wall_top_front() - thickness_of("2x4"), 2),
+                          run=width, rise=thickness_of("2x4"), kind="blocking"))
+        PLACEMENTS[pid] = xs
 
 
 def _opening_frame(spec, opening, parts):
@@ -192,39 +201,46 @@ def _opening_frame(spec, opening, parts):
     sill = float(opening["sill"])
     head = sill + height
     assembly = "%s_%s" % (wall, kind)
+    # two same-kind openings on one wall must not collide on an id, so the offset
+    # (required and stable) is part of the tag
+    tag = "%s_%s_%d" % (wall, kind, round(x))
     tall = round(spec.wall_top_front(), 2)
     thick = stock.board_dims("2x4")[0]
+    depth = stock.board_dims("2x4")[1]
     header_cls = opening.get("header") or header_class_for_span(width)
+    header_depth = stock.board_dims(header_cls)[1]
 
-    parts.append(Part(id="king_%s_%s" % (wall, kind), w=tall, h=thick, qty=2, stock="2x4",
+    parts.append(Part(id="king_%s" % tag, w=tall, h=depth, qty=2, stock="2x4",
                       assembly=assembly, note="king studs both sides of the opening",
                       wall=wall, x=round(x - thick, 2), y=0.0,
                       run=thick, rise=tall, kind="king"))
-    PLACEMENTS["king_%s_%s" % (wall, kind)] = [round(x - thick, 2), round(x + width, 2)]
-    parts.append(Part(id="jack_%s_%s" % (wall, kind), w=height, h=thick, qty=2, stock="2x4",
+    PLACEMENTS["king_%s" % tag] = [round(x - thick, 2), round(x + width, 2)]
+    parts.append(Part(id="jack_%s" % tag, w=height, h=depth, qty=2, stock="2x4",
                       assembly=assembly, note="jack/trim studs",
                       wall=wall, x=x, y=sill, run=thick, rise=height, kind="jack"))
-    PLACEMENTS["jack_%s_%s" % (wall, kind)] = [x, round(x + width - thick, 2)]
-    parts.append(Part(id="header_%s_%s" % (wall, kind), w=width,
-                      h=stock.board_dims(header_cls)[1], qty=2, stock=header_cls,
+    PLACEMENTS["jack_%s" % tag] = [x, round(x + width - thick, 2)]
+    parts.append(Part(id="header_%s" % tag, w=width,
+                      h=header_depth, qty=2, stock=header_cls,
                       assembly=assembly, note="doubled header, %s" % header_cls,
                       wall=wall, x=x, y=round(head, 2),
-                      run=width, rise=stock.board_dims(header_cls)[1], kind="header"))
-    cripple_len = tall - head
+                      run=width, rise=header_depth, kind="header"))
+    # a cripple runs from the header's top to the underside of the plate stack,
+    # never past the wall top
+    cripple_len = tall - head - header_depth - 2 * thick
     if cripple_len > 50.0:
         n = max(1, int(math.ceil(width / 406.4)) - 1)
         pitch = width / (n + 1.0)                    # evenly pitched across the opening
         centres = [round(x + pitch * i, 2) for i in range(1, n + 1)]
-        parts.append(Part(id="cripple_%s_%s" % (wall, kind), w=round(cripple_len, 2),
-                          h=thick, qty=n, stock="2x4", assembly=assembly,
+        parts.append(Part(id="cripple_%s" % tag, w=round(cripple_len, 2),
+                          h=depth, qty=n, stock="2x4", assembly=assembly,
                           note="cripples above the head",
                           wall=wall, x=round(centres[0] - thick / 2.0, 2),
-                          y=round(head + stock.board_dims(header_cls)[1], 2),
+                          y=round(head + header_depth, 2),
                           run=thick, rise=round(cripple_len, 2), kind="cripple"))
-        PLACEMENTS["cripple_%s_%s" % (wall, kind)] = [round(c - thick / 2.0, 2)
-                                                      for c in centres]
+        PLACEMENTS["cripple_%s" % tag] = [round(c - thick / 2.0, 2)
+                                          for c in centres]
     if kind != "door":                      # a door has no sill plate to trip over
-        parts.append(Part(id="sill_%s_%s" % (wall, kind), w=width, h=thick, qty=1,
+        parts.append(Part(id="sill_%s" % tag, w=width, h=depth, qty=1,
                           stock="2x4", assembly=assembly, note="sill plate",
                           wall=wall, x=x, y=sill, run=width, rise=thick, kind="sill"))
 

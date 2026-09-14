@@ -104,24 +104,34 @@ class TestFrame(unittest.TestCase):
 
     def test_door_opening_has_no_sill_plate(self):
         ids = [p.id for p in derive(spec())]
-        self.assertNotIn("sill_front_door", ids)
-        self.assertIn("sill_front_band", ids)
+        self.assertNotIn("sill_front_door_701", ids)
+        self.assertIn("sill_front_band_89", ids)
 
     def test_walls_have_blocking_at_the_bearing_line(self):
         parts = derive(spec())
         blocking = [p for p in parts if p.id.startswith("blocking_")]
-        self.assertEqual(len(blocking), 4)                 # one run per wall
-        front = [p for p in blocking if p.id == "blocking_front"][0]
-        # 8 stud positions, but the 1386.84 mm door removes the four centres inside
-        # it (D3) -> 4 placed studs -> 3 bays. Was 7 before studs followed openings.
-        self.assertEqual(front.qty, 3)
+        self.assertTrue(blocking)
+        # the front wall's bays are unequal once the door's studs are gone: two
+        # 360.42 mm bays and one 1954.08 mm bay = 3 pieces totalling 2674.92 mm
+        totals = {}
+        for p in blocking:
+            wall = p.id.split("_")[1]
+            qty, length = totals.get(wall, (0, 0.0))
+            totals[wall] = (qty + p.qty, length + p.w * p.qty)
+        self.assertEqual(totals["front"][0], 3)
+        self.assertAlmostEqual(totals["front"][1], 2674.92, places=1)
+        self.assertEqual(totals["back"][0], 7)
+        self.assertEqual(totals["left"][0], 6)
+        self.assertEqual(totals["right"][0], 6)
 
     def test_blocking_fits_the_actual_bay(self):
         # studs sit at span / bays, so the clear bay is that pitch minus a stud
         parts = derive(spec())
-        front = [p for p in parts if p.id == "blocking_front"][0]
-        self.assertAlmostEqual(front.w, 2788.92 / 7 - 38.0, places=1)    # 360.4 mm
-        left = [p for p in parts if p.id == "blocking_left"][0]
+        front_narrow = [p for p in parts if p.id == "blocking_front_1"][0]
+        self.assertAlmostEqual(front_narrow.w, 2788.92 / 7 - 38.0, places=1)  # 360.4
+        front_wide = [p for p in parts if p.id == "blocking_front_2"][0]
+        self.assertAlmostEqual(front_wide.w, 2390.5 - 398.42 - 38.0, places=1)  # 1954.1
+        left = [p for p in parts if p.id == "blocking_left_1"][0]
         self.assertAlmostEqual(left.w, 2179.32 / 6 - 38.0, places=1)     # 325.2 mm
 
     def test_glazing_is_panelised_too(self):
@@ -172,14 +182,15 @@ class TestPlacement(unittest.TestCase):
             self.assertFalse(door_x < c < door_x + door_w,
                              "stud at %.1f sits inside the door" % c)
 
-    def test_an_opening_that_does_not_reach_the_floor_keeps_its_studs(self):
-        # the clerestory band spans the whole front wall above head height; its studs
-        # stay, and the sill, header and cripples attach to them
-        front = self._row("stud_front").qty
-        door_only = len([c for c in frame.placed_centres(self.spec, "front")])
-        self.assertEqual(front, door_only)
-        back = self._row("stud_back").qty          # no openings at all
-        self.assertGreater(back, front)
+    def test_a_high_opening_keeps_its_studs(self):
+        # the left transom sits at sill 1508, well above the floor, so none of the
+        # wall's 7 studs is removed and a stud still falls inside the transom's x-range
+        self.assertEqual(self._row("stud_left").qty, 7)
+        centres = [x + 19.0 for x in frame.PLACEMENTS["stud_left"]]
+        transom = [o for o in self.spec.openings("left") if o["kind"] == "transom"][0]
+        x0 = self.spec.opening_x(transom)
+        self.assertTrue(any(x0 < c < x0 + float(transom["width"]) for c in centres),
+                        "no stud left inside the transom's x-range")
 
     def test_the_stud_run_still_closes_on_the_wall_end(self):
         xs = sorted(frame.PLACEMENTS["stud_front"])
@@ -187,20 +198,79 @@ class TestPlacement(unittest.TestCase):
 
     def test_blocking_fills_the_bays_between_placed_studs(self):
         centres = sorted(x + 19.0 for x in frame.PLACEMENTS["stud_front"])
-        blocking = sorted(frame.PLACEMENTS["blocking_front"])
+        blocking = []
+        for pid, xs in frame.PLACEMENTS.items():
+            if pid.startswith("blocking_front"):
+                blocking.extend(xs)
         self.assertEqual(len(blocking), len(centres) - 1)
 
     def test_king_studs_sit_on_the_opening_jambs(self):
-        kings = sorted(frame.PLACEMENTS["king_front_door"])
+        kings = sorted(frame.PLACEMENTS["king_front_door_701"])
         self.assertEqual(len(kings), 2)
         self.assertAlmostEqual(kings[0] + 38.0, 701.04, places=1)
         self.assertAlmostEqual(kings[1], 701.04 + 1386.84, places=1)
 
     def test_the_datum_is_the_floor_deck_and_the_door_head_agrees(self):
-        header = self._row("header_front_door")
+        header = self._row("header_front_door_701")
         self.assertAlmostEqual(header.y, 1811.02, places=1)
         sole = self._row("sole_plate_front")
         self.assertAlmostEqual(sole.y, 0.0, places=1)
+
+    def test_h_is_the_cutting_width_and_run_rise_are_drawn(self):
+        # h stays the stock's across-the-grain cutting width (89 for 2x4); the drawn
+        # extents live in run/rise only, so report.area() and the cutlist stay truthful
+        cases = {
+            "king_front_door_701": ("2x4", 38.0, 2138.06),
+            "jack_front_door_701": ("2x4", 38.0, 1811.02),
+            "cripple_front_door_701": ("2x4", 38.0, 67.04),
+            "sill_front_band_89": ("2x4", 2610.92, 38.0),
+            "header_front_door_701": ("2x8", 1386.84, 184.0),
+        }
+        for pid, (cls, run, rise) in cases.items():
+            p = self._row(pid)
+            self.assertAlmostEqual(p.h, stock.board_dims(cls)[1], places=2, msg=pid)
+            self.assertAlmostEqual(p.run, run, places=2, msg=pid)
+            self.assertAlmostEqual(p.rise, rise, places=2, msg=pid)
+
+    def test_the_band_header_is_recorded_above_the_wall_top(self):
+        # the band's head equals the wall top, so its doubled header cannot fit inside
+        # the wall. Record where the schedule puts it so Task 3's overshoot note is
+        # anchored; the plate stack itself is issue #7's to fix.
+        header = self._row("header_front_band_89")
+        self.assertAlmostEqual(header.y, 2138.04, places=2)
+        self.assertAlmostEqual(header.rise, 140.0, places=2)      # 2x6 depth
+        self.assertGreater(header.y + header.rise, self.spec.wall_top_front())
+
+    def test_two_floor_openings_on_one_wall_keep_separate_ids(self):
+        data = json.loads(json.dumps(SPEC))
+        data["openings"] = [
+            {"wall": "back", "kind": "window", "width": 500.0, "height": 1000.0,
+             "sill": 0.0, "header": None, "x": 200.0},
+            {"wall": "back", "kind": "window", "width": 500.0, "height": 1000.0,
+             "sill": 0.0, "header": None, "x": 1200.0},
+        ]
+        s = BuildSpec(data)
+        parts = frame.derive(s)
+        kings = [p for p in parts if p.id.startswith("king_back_window")]
+        self.assertEqual(len(kings), 2)
+        first = sorted(frame.PLACEMENTS["king_back_window_200"])
+        second = sorted(frame.PLACEMENTS["king_back_window_1200"])
+        self.assertEqual(first, [162.0, 700.0])
+        self.assertEqual(second, [1162.0, 1700.0])
+
+    def test_a_stud_body_straddling_a_door_edge_is_removed(self):
+        # a door at x=400 w=700 leaves a stud centred 398.42 whose 38 mm body reaches
+        # 417.42, 17.42 mm into the clear opening; centre-in-range would keep it
+        data = json.loads(json.dumps(SPEC))
+        data["openings"] = [
+            {"wall": "back", "kind": "door", "width": 700.0, "height": 1000.0,
+             "sill": 0.0, "header": None, "x": 400.0},
+        ]
+        centres = frame.placed_centres(BuildSpec(data), "back")
+        self.assertNotIn(398.42, centres)
+        for c in centres:
+            self.assertFalse(c - 19.0 < 1100.0 and c + 19.0 > 400.0,
+                             "stud at %.2f still straddles the jamb" % c)
 
     def test_drawn_extents_are_not_the_cutting_dimensions(self):
         stud = self._row("stud_front")
