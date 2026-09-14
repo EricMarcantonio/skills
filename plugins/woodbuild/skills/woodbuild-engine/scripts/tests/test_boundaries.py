@@ -33,11 +33,10 @@ ENGINE_SKILL = PLUGINS / "woodbuild" / "skills" / "woodbuild-engine"
 
 
 def skill_dirs():
-    # Only the three plugins this migration owns. The repo also carries unrelated
-    # pre-existing marketplace plugins whose frontmatter names are namespaced for
-    # Claude Code (e.g. "ericmarcantonio:clean-code"); they are out of scope here.
-    return sorted(p for plugin in EXPECTED_PLUGINS
-                  for p in (PLUGINS / plugin).glob("skills/*/SKILL.md"))
+    # Every plugin in the marketplace tree, so the shape checks keep their full
+    # coverage. Namespaced marketplace names (e.g. "ericmarcantonio:clean-code") are
+    # accepted by the name rule below as long as the final segment is the directory.
+    return sorted(p for p in PLUGINS.glob("*/skills/*/SKILL.md"))
 
 
 def plugin_dirs():
@@ -94,7 +93,12 @@ class TestSkillsAreWellFormed(unittest.TestCase):
                 desc = re.search(r"^description: (.+)$", front, re.M)
                 self.assertIsNotNone(name, "%s has no name" % path)
                 self.assertIsNotNone(desc, "%s has no description" % path)
-                self.assertEqual(name.group(1).strip(), path.parent.name)
+                # Marketplace skills may namespace their name (`owner:skill`) and quote
+                # the YAML scalar; pi itself is lenient here. What must hold is that the
+                # skill answers to its directory name.
+                declared = name.group(1).strip().strip("'\"")
+                self.assertEqual(declared.split(":")[-1], path.parent.name,
+                                 "%s declares name %r" % (path, declared))
                 self.assertGreater(len(desc.group(1).strip()), 20)
                 self.assertLessEqual(len(desc.group(1).strip()), 1024)
 
