@@ -1,9 +1,12 @@
-"""Home Depot Canada: the only file in this repository that names a store.
+"""Home Depot Canada: the store the engine learns about by loading this file.
 
-Everything store-specific lives here: the MCP tool names, the store id, the
-machine-local server path, the provincial tax table and the availability labels.
-The engine takes this as data through `woodbuild.adapters.StoreAdapter`, so a
-different retailer is a different file like this one and no engine change.
+Everything store-specific that the engine consumes lives here: the MCP tool names,
+the store id, the machine-local server path, the provincial tax table and the
+availability labels. The engine takes this as data through
+`woodbuild.adapters.StoreAdapter`, so a different retailer is a different file like
+this one and no engine change. This module imports `woodbuild.adapters`, so it is
+loaded *by* the engine and needs the woodbuild plugin's `scripts/` directory on
+`sys.path`.
 
 Pass it to the CLI:  --adapter <skills-repo>/plugins/homedepot/skills/homedepot-catalogue/scripts/homedepot_adapter.py
 """
