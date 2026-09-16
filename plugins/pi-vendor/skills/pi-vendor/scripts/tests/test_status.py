@@ -106,7 +106,7 @@ class DriftTest(unittest.TestCase):
             cfg, archive = build_fixture(pathlib.Path(tmp))
             (archive / "MANIFEST.json").unlink()
             drift = pi_vendor.drift(cfg, archive)
-            self.assertEqual(sorted(d[2] for d in drift), ["node_modules/demo", "owner/repo"])
+            self.assertEqual(sorted(d[2] for d in drift), ["demo", "node_modules/demo", "owner/repo"])
             self.assertTrue(all(d[0] == "missing" for d in drift))
 
     def test_detects_new_package_in_lockfile(self):
@@ -142,6 +142,17 @@ class DriftTest(unittest.TestCase):
             subprocess.run(["git", "-C", str(repo), "commit", "-qam", "second"], check=True)
             drift = pi_vendor.drift(cfg, archive)
             self.assertEqual([(d[0], d[2]) for d in drift], [("changed", "owner/repo")])
+
+    def test_detects_settings_package_missing_from_archive(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            cfg, archive = build_fixture(pathlib.Path(tmp))
+            manifest_path = archive / "MANIFEST.json"
+            manifest = json.loads(manifest_path.read_text())
+            manifest["items"] = [i for i in manifest["items"] if i["kind"] != "npm"]
+            manifest_path.write_text(json.dumps(manifest))
+            drift = pi_vendor.drift(cfg, archive)
+            findings = [(d[0], d[2]) for d in drift if d[1] == "npm-settings"]
+            self.assertEqual(findings, [("missing", "demo")])
 
     def test_cli_reports_drift_and_exit_code(self):
         with tempfile.TemporaryDirectory() as tmp:

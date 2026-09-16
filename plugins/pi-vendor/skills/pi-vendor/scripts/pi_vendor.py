@@ -92,6 +92,15 @@ def drift(cfg: pathlib.Path, archive: pathlib.Path) -> list:
                 ("changed", "npm", path, f"{archived_npm[path]['version']} -> {current_npm[path].get('version', '?')}")
             )
 
+    # settings.json can declare an npm package that was never installed, so it never
+    # reaches the lockfile; compare the declared names against the manifest's direct
+    # items so a declared-but-unarchived package is reported instead of passing.
+    direct_archived = {
+        i.get("name") for i in manifest["items"] if i["kind"] == "npm" and i.get("direct")
+    }
+    for name in sorted(set(read_settings(cfg)[1]) - direct_archived):
+        findings.append(("missing", "npm-settings", name, "declared in settings.json, not archived"))
+
     _, _, git_specs = read_settings(cfg)
     for spec in git_specs:
         directory = git_dir(cfg, spec)

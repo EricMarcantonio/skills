@@ -1,0 +1,10 @@
+{
+  "name": "pi-vendor",
+  "version": "1.0.0",
+  "description": "Keeps a private offline archive of the pi packages pi-config installs, so a vanished upstream package cannot make the pi setup unrebuildable",
+  "tags": ["pi", "vendoring", "offline", "archive", "disaster-recovery"],
+  "author": {
+    "name": "Eric Marcantonio",
+    "url": "https://github.com/EricMarcantonio"
+  }
+}

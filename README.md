@@ -28,6 +28,7 @@ pi install git:github.com/EricMarcantonio/skills
 | [freecad](plugins/freecad/) | FreeCAD authoring hygiene and reliable view capture | `/plugin install EricMarcantonio/skills/plugins/freecad` |
 | [homedepot](plugins/homedepot/) | Home Depot Canada sourcing and pricing for the woodbuild engine | `/plugin install EricMarcantonio/skills/plugins/homedepot` |
 | [car-manual-specs](plugins/car-manual-specs/) | Extracts maintenance and torque specs from car service manual PDFs | `/plugin install EricMarcantonio/skills/plugins/car-manual-specs` |
+| [pi-vendor](plugins/pi-vendor/) | Keeps a private offline archive of the packages `pi-config` installs, so a vanished upstream package cannot make the setup unrebuildable | `/plugin install EricMarcantonio/skills/plugins/pi-vendor` |
 
 ## Contributing
 
