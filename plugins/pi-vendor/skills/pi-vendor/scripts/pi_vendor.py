@@ -300,16 +300,25 @@ def cmd_snapshot(args) -> int:
     lib = load_archive_lib(archive)
 
     findings = drift(cfg, archive)
-    if findings and not args.allow_drift:
+    if findings:
         for kind, flavour, identifier, detail in findings:
             print(f"{kind:8} {flavour:4} {identifier} ({detail})")
-        print("pi-vendor: drift detected; re-run with --allow-drift once the above is expected")
-        return 3
+        if not args.allow_drift:
+            print("pi-vendor: drift detected; re-run with --allow-drift once the above is expected")
+            return 3
+        print(f"pi-vendor: proceeding with --allow-drift; {len(findings)} finding(s) accepted")
 
     _, _, git_specs = read_settings(cfg)
     items = build_npm_items(cfg, archive, lib)
     items += build_git_items(cfg, archive, lib, git_specs)
-    write_manifest(cfg, archive, lib, items)
+    manifest = write_manifest(cfg, archive, lib, items)
+    # The summary and the commit subject are the archive's audit trail, so they must agree
+    # with MANIFEST.json and name the kinds rather than lumping 126 npm tarballs, 2 git
+    # bundles and 2 lockfile items into one "packages" count.
+    counts = {}
+    for item in manifest["items"]:
+        counts[item["kind"]] = counts.get(item["kind"], 0) + 1
+    breakdown = ", ".join(f"{count} {kind}" for kind, count in sorted(counts.items()))
 
     verify = subprocess.run([str(archive / "verify.sh")], cwd=str(archive), capture_output=True, text=True)
     if verify.returncode != 0:
@@ -317,11 +326,11 @@ def cmd_snapshot(args) -> int:
 
     subprocess.run(["git", "-C", str(archive), "add", "-A"], check=True)
     subprocess.run(
-        ["git", "-C", str(archive), "commit", "-q", "-m", f"chore: snapshot {len(items)} packages"],
+        ["git", "-C", str(archive), "commit", "-q", "-m", f"chore: snapshot {len(manifest['items'])} items ({breakdown})"],
         check=True,
     )
     subprocess.run(["git", "-C", str(archive), "push", "origin", "HEAD"], check=True)
-    print(f"pi-vendor: archived {len(items)} items from {cfg}")
+    print(f"pi-vendor: archived {len(manifest['items'])} items from {cfg}: {breakdown}")
     return 0
 
 

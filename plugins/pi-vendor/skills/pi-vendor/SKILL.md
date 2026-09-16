@@ -39,6 +39,11 @@ python3 pi_vendor.py snapshot [--allow-drift]
 ~/pi-vendor-archive/restore.sh --into /tmp/scratch
 ```
 
+`verify` and `restore` are archive-side commands, not subcommands of this skill: the skill
+exposes only `status` and `snapshot`, and calls the archive's own `verify.sh` / `restore.sh`
+for everything else. Recovery must not depend on this skill being installed — that is why the
+archive carries those scripts itself.
+
 ## Rules
 
 - `snapshot` copies the exact published tarballs out of npm's content-addressed
