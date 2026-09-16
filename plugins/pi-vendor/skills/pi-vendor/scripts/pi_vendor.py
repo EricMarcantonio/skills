@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import argparse
+import datetime
 import json
 import os
 import pathlib
+import shutil
 import subprocess
 import sys
 
@@ -122,12 +124,207 @@ def cmd_status(args) -> int:
     return 3 if args.fail_on_drift else 0
 
 
+def npm_cache_dir() -> pathlib.Path:
+    return pathlib.Path.home() / ".npm" / "_cacache"
+
+
+def ensure_archive_ready(archive: pathlib.Path) -> None:
+    """Refuse to snapshot onto a dirty or behind clone."""
+    if not (archive / ".git").exists():
+        raise SystemExit(f"FAIL {archive} is not a git clone")
+    status = subprocess.run(
+        ["git", "-C", str(archive), "status", "--porcelain"], capture_output=True, text=True, check=True
+    ).stdout.strip()
+    if status:
+        raise SystemExit(f"FAIL {archive} has uncommitted changes; commit or stash them first")
+    subprocess.run(["git", "-C", str(archive), "fetch", "--quiet", "origin"], check=True)
+    behind = subprocess.run(
+        ["git", "-C", str(archive), "rev-list", "--count", "HEAD..@{upstream}"],
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout.strip()
+    if behind != "0":
+        raise SystemExit(f"FAIL {archive} is {behind} commit(s) behind origin; pull first")
+
+
+def build_npm_items(cfg: pathlib.Path, archive: pathlib.Path, lib) -> list:
+    """Copy each lockfile entry's exact published tarball out of the npm cache."""
+    cache = npm_cache_dir()
+    items = []
+    for lock_path, meta in sorted(read_lockfile(cfg).items()):
+        integrity = meta.get("integrity")
+        if not integrity:
+            continue
+        blob = lib.cacache_path(cache, integrity)
+        name = package_name(lock_path)
+        version = meta.get("version", "0.0.0")
+        if not blob.is_file():
+            raise SystemExit(
+                f"FAIL {name}@{version} is missing from the npm cache ({blob}); "
+                f"run `npm cache add {name}@{version}` or "
+                f"`npm pack {name}@{version} --pack-destination <archive>/vendor/npm`"
+            )
+        relative = pathlib.Path("vendor") / "npm" / lib.tarball_filename(name, version)
+        destination = archive / relative
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(blob, destination)
+        items.append(
+            {
+                "kind": "npm",
+                "name": name,
+                "version": version,
+                "path": lock_path,
+                "resolved": meta.get("resolved", ""),
+                "integrity": integrity,
+                "sha256": lib.sha256_file(destination),
+                "bytes": destination.stat().st_size,
+                "file": relative.as_posix(),
+                "direct": name in direct_npm_names(cfg),
+            }
+        )
+    return items
+
+
+def direct_npm_names(cfg: pathlib.Path) -> set:
+    _, npm, _ = read_settings(cfg)
+    return {name for name in npm}
+
+
+def build_git_items(cfg: pathlib.Path, archive: pathlib.Path, lib, specs: list) -> list:
+    items = []
+    for spec in specs:
+        slug = repo_slug(spec)
+        directory = git_dir(cfg, spec)
+        if not directory.is_dir():
+            raise SystemExit(f"FAIL {directory} is not installed; cannot bundle {slug}")
+        relative = pathlib.Path("vendor") / "git" / lib.bundle_filename(slug)
+        destination = archive / relative
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        subprocess.run(
+            ["git", "-C", str(directory), "bundle", "create", str(destination), "--all"],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        upstream = subprocess.run(
+            ["git", "-C", str(directory), "remote", "get-url", "origin"],
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout.strip()
+        items.append(
+            {
+                "kind": "git",
+                "repo": slug,
+                "upstreamUrl": upstream,
+                "commit": git_head(directory),
+                "branch": subprocess.run(
+                    ["git", "-C", str(directory), "rev-parse", "--abbrev-ref", "HEAD"],
+                    capture_output=True,
+                    text=True,
+                    check=True,
+                ).stdout.strip(),
+                "headSubject": subprocess.run(
+                    ["git", "-C", str(directory), "log", "-1", "--format=%s"],
+                    capture_output=True,
+                    text=True,
+                    check=True,
+                ).stdout.strip(),
+                "sha256": lib.sha256_file(destination),
+                "bytes": destination.stat().st_size,
+                "file": relative.as_posix(),
+            }
+        )
+    return items
+
+
+def write_manifest(cfg: pathlib.Path, archive: pathlib.Path, lib, items: list) -> dict:
+    """Copy the lockfile pair, refuse on secrets, and write MANIFEST.json."""
+    packages, _, git_specs = read_settings(cfg)
+    vendor_npm = archive / "vendor" / "npm"
+    vendor_npm.mkdir(parents=True, exist_ok=True)
+    for name in ("package.json", "package-lock.json"):
+        shutil.copy2(cfg / "npm" / name, vendor_npm / name)
+    secrets = lib.scan_for_secrets((vendor_npm / "package-lock.json").read_text())
+    if secrets:
+        raise SystemExit(f"FAIL copied package-lock.json looks like it carries a credential: {secrets}")
+    # The lockfile pair is the only record of the resolved dependency graph, because
+    # pi-config's npm/ is gitignored. Record it as manifest items so verify.sh's
+    # existing generic file/size/sha256 check covers it without any change to
+    # verify.py: check_item only special-cases kind == "npm", and restore's item
+    # filters are kind-based too.
+    lockfile_items = []
+    for name in ("package.json", "package-lock.json"):
+        path = vendor_npm / name
+        lockfile_items.append(
+            {
+                "kind": "lockfile",
+                "name": name,
+                "file": path.relative_to(archive).as_posix(),
+                "sha256": lib.sha256_file(path),
+                "bytes": path.stat().st_size,
+            }
+        )
+    manifest = {
+        "version": lib.MANIFEST_VERSION,
+        "updatedAt": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "source": {
+            "settingsPackages": packages,
+            "lockfile": "vendor/npm/package-lock.json",
+            "gitDirs": [str(git_dir(cfg, spec)) for spec in git_specs],
+            "piConfigCommit": subprocess.run(
+                ["git", "-C", str(cfg), "rev-parse", "--short", "HEAD"],
+                capture_output=True,
+                text=True,
+            ).stdout.strip(),
+        },
+        "items": items + lockfile_items,
+    }
+    lib.save_manifest(archive / "MANIFEST.json", manifest)
+    return manifest
+
+
+def cmd_snapshot(args) -> int:
+    cfg, archive = config_dir(), archive_dir()
+    ensure_archive_ready(archive)
+    lib = load_archive_lib(archive)
+
+    findings = drift(cfg, archive)
+    if findings and not args.allow_drift:
+        for kind, flavour, identifier, detail in findings:
+            print(f"{kind:8} {flavour:4} {identifier} ({detail})")
+        print("pi-vendor: drift detected; re-run with --allow-drift once the above is expected")
+        return 3
+
+    _, _, git_specs = read_settings(cfg)
+    items = build_npm_items(cfg, archive, lib)
+    items += build_git_items(cfg, archive, lib, git_specs)
+    write_manifest(cfg, archive, lib, items)
+
+    verify = subprocess.run([str(archive / "verify.sh")], cwd=str(archive), capture_output=True, text=True)
+    if verify.returncode != 0:
+        raise SystemExit(f"FAIL archive verify failed:\n{verify.stdout}{verify.stderr}")
+
+    subprocess.run(["git", "-C", str(archive), "add", "-A"], check=True)
+    subprocess.run(
+        ["git", "-C", str(archive), "commit", "-q", "-m", f"chore: snapshot {len(items)} packages"],
+        check=True,
+    )
+    subprocess.run(["git", "-C", str(archive), "push", "origin", "HEAD"], check=True)
+    print(f"pi-vendor: archived {len(items)} items from {cfg}")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="pi-vendor archive helper")
     sub = parser.add_subparsers(dest="command", required=True)
     status = sub.add_parser("status", help="report drift against the archive")
     status.add_argument("--fail-on-drift", action="store_true", help="exit 3 when drift is found")
     status.set_defaults(func=cmd_status)
+    snapshot = sub.add_parser("snapshot", help="refresh the archive from the live install")
+    snapshot.add_argument("--allow-drift", action="store_true", help="snapshot despite reported drift")
+    snapshot.set_defaults(func=cmd_snapshot)
     return parser
 
 
