@@ -17,7 +17,7 @@ plugins/
     README.md               # Plugin documentation
 package.json                # pi package manifest; declares "pi": {"skills": ["plugins/*/skills"]}
 README.md                   # Repo overview and install instructions
-CLAUDE.md                   # This file
+AGENTS.md                   # This file (CLAUDE.md imports it)
 ```
 
 ## Adding a New Plugin
